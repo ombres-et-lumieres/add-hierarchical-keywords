@@ -4,58 +4,36 @@ add-hierarchical_keywords
 
 Version de base, 1.0.0
 
-L' objet de ce plugin est de récupérer les éléments de base d' une photo mots clefs, auteur, description, libellé, titre, légende et les coller dans les champs adéquats des photos au moment de l' upload.
+L' objet de ce plugin est de rendre la gestion de la bibliothèque plus simple pour les photographes qui ont des catalogues qui se comptent en milliers d' images.
 
-Il est conçu pour fonctionner avec le plugin Adobe XMP for WP. 
-Comme il est destiné aux photographes au moins expérimentés, qui donc utilisent un catalogueur, le format XMP d' adobe m' a semblé être un choix judicieux parce que plus simple à lire et contenant un maximum d' information. Le plugin qui va récupérer ces infos ne les cherchent pas toutes mais les principales sont là.
+Cela se fera à plusieurs niveaux: 
 
-
-A terme je voudrais créer un plugin permettant de gérer une vaste bibliothèque de photos comme celles utilisées, en terme de quantité d' images, quotidiennement par les photographes. Mon modèle est Lightroom. 
-Etant un photographe avec quelques compétences dans le domaine de la programmation, je pense pouvoir mener ce projet à bien si j' ai de l' aide de développeurs wordpress chevronnés pour guider mes pas: ma plus grosse perte de temps étant de devoir trop souvent fouiller le codex pour trouver "la fonction" utile.
-
-Du point de vue de mes capacités, si je suis parfaitement à l' aise avec une programmation strictement procédurale, je reste encore incapable d' écrire en orienté objet. Ce qui dans certains cas serait bien utile. Par contre, je n' ai pas trop de problèmes pour lire un code écrit de cette façon.
-Lorsque j' ai appris à jouer avec ces drôles de machines, le PC n' existait pas encore et les programmes, qui ne portaient pas encore le nom de logiciels et encore moins de cms, internet n' existait pas, étaient strictement utilitaires. 
-
-Je fais donc appel à tous ceux que ce projet intéresse pour m' aider à avancer dans sa construction.
+_  La partie la plus importante est la création d' une taxonomie qui récupèrera les mots clefs hiérarchiques pour faciliter la gestion tant dans la back-end que pour le visiteur du site. Dans le back-end, en implantant les outils qui ont fait de Lightroom un incontournable en ce qui concerne l' art du catalogage: la capacité de filtrer par dates et mots clefs successifs.
+A cela j' ajouterai un template de page permettant d' afficher l' archive de la taxonomie. 
 
 
+_  A cela, j' ai ajouté des fonctions qui modifient le comportement de la galerie native pour l' afficher de manière plus seo friendly, mais également en donnant à l' utilisateur la possibilité de choisir son affichage: hauteur égale, en ligne, ou surface égale via l' affichage Masonry. Ici cela fonctionnera une fois que j' aurai la page d' option adéquate.
+Une autre page d' option donnera à l' utilisateur une série de choix en ce qui concerne les taillles d' affichage des imagettes, que ce soit dans les galeries ou pour les post thumbnails.
 
-La première étape est de placer les mots clefs dans une taxonomie propre nommée "hierarchical keywords", pour la différentier de celle, native, de wordpress.
-Pour cela le plugin Adobe XMP for WP me fournit un objet  $adobeXMP et une méthode get_xmp( $attachment_id ) qui renvoit un tableau de données XMP.
- 
-La deuxième étape sera d' aller placer le reste des données dans les champs adéquats.
-
-Et ce sera la fin de la partie facile.
-
-
-
-
-
-L' écran d' administration des médias est devenu quelque chose de plus pratique au fil des ans, mais manque encore cruellement de fonctions de recherche sur les médias. Il faudra y ajouter au moins deux champs de tri via mots clefs, un champ de tri par date et un champ de tri par article, pour arriver à cerner au plus près les photos recherchées.
-
-D' un autre côté, s' il permet de modifier les datas d' une photo, on est obligé de le faire une par une et non pas sur un ensemble: il peut être judicieux de modifier une légende, adaptée au niveau de son catalogueur parce qu' elle permet de se rapeller un minimum sur la photo, mais moins adaptée sur un site web. Et modifier ce champ photo après photo peut vite se révéler fastidieux lorsque cela dépasse la dizaine de photos. La même réflexion me vient au sujet des mots clefs. 
-
-
-
-
-Vous avez donc ici l' ensemble de mes réflexions sur le sujet, et, surtout, un résumé de ma vision d' un vrai catalogueur dans l' écran des médias.
-
-
-
-
-
-
-ce qui est utilisable: la taxonomie, l' ajout de métadonnées
-
-
-
-
-
-
-
-
+_  La réorganisation des champs de l' écran d' un média. Actuellement les données ne sont pas correctement mises en mémoire: 
+   Si le titre du média est bien celui figurant dans les datas de celui-ci, ce n' est pas la bonne méthode parce que, et je ne pense pas être le seul, lors de l' archivage d' une série, je lui donne un titre générique, ce qui va rendre problématique une recherche via le titre de la photo. Donc, je propose de remplacer ce titre par le nom du fichier qui, lui, est unique, ce qui, du point de vue informatique est nettement plus normal.
+  La légende s' affiche au bon endroit, mais d' un point de vue de wordpress, comme c' est le texte principal, c' est dans le champ "description" qu' il devrait se placer. dans ce champ, je placerais volontiers le titre.
+  Le texte alternatif est vide et je le laisserai ainsi parce que je le construirai de manière dynamique, à la volée, dans l' affichage des photos.
+  Il rest un champ de base non utilisé parce qu' il n' existe pas dans wordpress: le Libellé. Je créerai donc un champ supplémentaire pour l' afficher, et tant que j' y suis j' ajouterai dans cette zone un champ pour l' auteur, un autre pour les crédits, un pour le pays, un pour la ville, un pour la ville, un pour le lieu, un pour la date de création, un pour la date de modification, un pour le genre photographique et un pour les coordonnées GPS.
+  Et, tant que je suis occupé à réorganiser les données liées à la photo, la date du post ne sera pus la date de l' upload, mais la date de prise de vue, ce qui me semble plus logique pour du tri.
 
  
  
+ Je n' ai pas l' intention de m' arrêter en si bon chemin, donc toute idée sera la bienvenue.
+ 
+ 
+ 
+ 
+ Comme toute collaboration: je ne suis pas un développeur à plein temps, donc je n' ai pas nécessairement les connaissances pour tout mener à bien et il y a des choses que je fais pour la première fois. Ceci pour dire que toute aide sera la bienvenue: ce sera un gain de temps précieux.
+ Si vous avez besoin de photos bien archvées, je peux vous en envoyer une série.
+ 
+ 
+ 
+ Ce qui est déjà réalisé et fonctionne: l' ajout de la taxonomie, avec un léger bug sur certains mots clefs et l' ajout des métas
  
  
