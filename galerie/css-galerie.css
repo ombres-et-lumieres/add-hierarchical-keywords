@@ -1,0 +1,35 @@
+.gallery {
+	display: inline-block;
+	margin-bottom: 50px;
+	width: 100%
+}
+
+
+.gallery .gallery-item {
+	float: left;
+	list-style: none;
+	margin-right: 2%;
+	margin-bottom: 10px;
+}
+
+.gallery .gallery-item img {
+	border: 3px solid rgb(125, 125, 125);
+}
+
+li.px100 {
+	height: 100px;
+}
+
+li.px150 {
+	height: 150px;
+}
+
+li.px200 {
+	height: 200px;
+}
+
+li.px250 {
+	height: 250px;
+}
+
+
