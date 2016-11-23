@@ -33,7 +33,30 @@ _  La réorganisation des champs de l' écran d' un média. Actuellement les don
  Si vous avez besoin de photos bien archvées, je peux vous en envoyer une série.
  
  
+ Collaborations:
+ Etienne Mommalier pour le script organisant les mots clefs
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
  
  Ce qui est déjà réalisé et fonctionne: l' ajout de la taxonomie, avec un léger bug sur certains mots clefs et l' ajout des métas
+ 
+ 
+ Pour fonctionner correctement, le plugin JSM's Adobe XMP / IPTC for WordPress doit être installé et activé.
+ (https://wordpress.org/plugins/adobe-xmp-for-wp/)
+ 
+ De plus, parce que je n' ai pas encore écrit le code pour ajouter la colonne des mots clefs dans l' admin des médias, ni ajouté le déroulant de ces derniers, le plugin Enhanced Media Library est nécessaire
+ (https://wordpress.org/plugins/enhanced-media-library/)
  
  

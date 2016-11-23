@@ -20,7 +20,7 @@ function ol_add_hierarchical_keywords($attachment_id)
 
 					$parent_id = 0;
 
-					foreach( $tabTerms as $term )
+					foreach( $tabTerms as $key =>$term )
 						{ // Ici parcourt terme de chaque sous tableau
 
 							// Ici, si le terme existe, on recupère un tableau, l'id du terme est $term_exists["term_id"]
@@ -30,21 +30,28 @@ function ol_add_hierarchical_keywords($attachment_id)
 							if ( !$term_exists )
 								{
 									$term_insert = wp_insert_term( $term, "hierarchical_keywords", array( 'parent' => $parent_id ) );
-									if ( !is_wp_error( $term_insert ) ) {
-										// Si on a aucune erreur pour créer le terme
-										$parent_id = $term_insert["term_id"];
-									} /*
-else
+									if ( !is_wp_error( $term_insert ) )
 										{
-											// Action à faire s'il y a une erreur à la création du terme
+											// Si on a aucune erreur pour créer le terme
+											$parent_id = $term_insert["term_id"];
 										}
+/*
+										else
+											{
+												// Action à faire s'il y a une erreur à la création du terme
+											}
 */
+									if (0 == $key)
+										{
+											$association = wp_set_object_terms($attachment_id, $parent_id,  "hierarchical_keywords", true);
+										}
 
 								}
 								else
 									{
 										$parent_id = $term_exists["term_id"];
 									}
+
 					}
 
 					// On a parcouru tout le sous tableau.
