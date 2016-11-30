@@ -5,10 +5,10 @@
 /* ************************************************************** ***************/
 
 
-function ol_attachment_metas_fields ($form_fields, $post )
+function ol_attachment_metas_fields ($form_fields, $attachment )
 {
 
-  $metas =  wp_get_attachment_metadata($post->ID);
+  $metas =  wp_get_attachment_metadata( $attachment->ID);
 
   $metas = $metas["oetl"];
 
@@ -39,13 +39,11 @@ add_filter( 'attachment_fields_to_edit', 'ol_attachment_metas_fields', 10, 2 ); 
 
 
 
-function ol_attachment_metas_fields_save( $post, $attachment )
+function ol_attachment_metas_fields_save( $attachment, $attachment_metas )
 {
-	$post_id = $post->ID;
+	 $attachmentt_id =  $attachment->ID;
 
-	$metas =  wp_get_attachment_metadata($post_id);
-
-	$metas = $metas["oetl"];
+	$metas = $attachment_metas["oetl"];
 
 	foreach($metas as $key => $value)
 		{
@@ -54,7 +52,7 @@ function ol_attachment_metas_fields_save( $post, $attachment )
 			update_post_meta( $post_id, $key, esc_html($attachment[$key]));
 		}
 
-    return $post;
+    return  $attachment;
 
 }
 

@@ -1,86 +1,5 @@
 <?php
 
-
-
-function ol_add_hierarchical_keywords($attachment_id)
-{
-	global $adobeXMP;
-
-	$xmp = $adobeXMP->get_xmp( $attachment_id );
-
-	$hierar_keywords = $xmp["Hierarchical Keywords"];
-
-	if ( !empty( $hierar_keywords ) )
-		{
-			// Tableau pour stocker les ID de tous les termes enfants les plus bas de chaque sous tableau
-			$terms_to_associate = array();
-
-			foreach ( $hierar_keywords as $tabTerms )
-				{
-
-					$parent_id = 0;
-
-					foreach( $tabTerms as $key =>$term )
-						{ // Ici parcourt terme de chaque sous tableau
-
-							// Ici, si le terme existe, on recupère un tableau, l'id du terme est $term_exists["term_id"]
-							$term_exists = term_exists( $term, "hierarchical_keywords");
-
-							// S'il existe pas on le créé
-							if ( !$term_exists )
-								{
-									$term_insert = wp_insert_term( $term, "hierarchical_keywords", array( 'parent' => $parent_id ) );
-									if ( !is_wp_error( $term_insert ) )
-										{
-											// Si on a aucune erreur pour créer le terme
-											$parent_id = $term_insert["term_id"];
-										}
-/*
-										else
-											{
-												// Action à faire s'il y a une erreur à la création du terme
-											}
-*/
-									if (0 == $key)
-										{
-											$association = wp_set_object_terms($attachment_id, $parent_id,  "hierarchical_keywords", true);
-										}
-
-								}
-								else
-									{
-										$parent_id = $term_exists["term_id"];
-									}
-
-					}
-
-					// On a parcouru tout le sous tableau.
-					// Logiquement, $parent_id = l'id du terme enfant le plus bas du sous tableau.
-					if ( $parent_id != 0 )
-						{
-							$terms_to_associate[] = $parent_id; // On l'ajoute au tableau des termes à associer
-						}
-
-			}
-
-		$terms_to_associate = array_map( 'intval', $terms_to_associate ); // On s'assure que tous les termes ID soient en int
-		$association = wp_set_object_terms( $attachment_id, $terms_to_associate, "hierarchical_keywords", true );
-
-		/*
-		if ( is_wp_error( $association ) )
-			{
-				// Action à faire en cas d'erreur à l'association du terme avec le post type
-			}
-		*/
-	}
-}
-add_action('add_attachment', 'ol_add_hierarchical_keywords', 15, 1);
-
-
-
-
-
-
 // Register Custom Taxonomy
 function hierarchical_keywords() {
 
@@ -120,6 +39,158 @@ function hierarchical_keywords() {
 
 }
 add_action( 'init', 'hierarchical_keywords', 1 );
+
+
+
+
+
+
+/* ajout des mots clefs dans la bd pour la taxo "hierarchical_keywords" */
+
+
+
+function ol_add_hierarchical_keywords($attachment_id)
+{
+    global $adobeXMP;
+
+    $xmp = $adobeXMP->get_xmp( $attachment_id );
+
+    $hierar_keywords = $xmp["Hierarchical Keywords"];
+
+    if ( !empty( $hierar_keywords ) )
+    {
+        // Tableau pour stocker les ID de tous les termes enfants les plus bas de chaque sous tableau
+        $terms_to_associate = array();
+
+        foreach ( $hierar_keywords as $keyPrincipale => $tabTerms )
+        {
+            $parent_id = 0;
+
+            foreach( $tabTerms as $key =>$term )
+            {
+                // Ici parcourt terme de chaque sous tableau
+
+                // Ici, si le terme existe, on recupère un tableau, l'id du terme est $term_exists["term_id"]
+
+                if ( 0 == $parent_id )
+                {
+                    // Cas où parent_id = 0, c'est à dire qu'on est dans le plus haut niveau ! Dans le tableau d'exemple c'est "Pays" pour chaque sous tableau
+                    // Donc il n'y a pas de parent, c'est le keyword racine, il ne peut pas y avoir de doublon
+                    $term_exists = term_exists( $term, "hierarchical_keywords");
+                }
+                else
+	                {
+	                    // Cas où parent_id != 0 donc on est dans "Portugal", "Madeira" ou "Funchal"
+	                    // On vérifie si le terme existe déjà avec l'id du parent
+	                    // Exemple avec le dernier sous tableau
+	                    // Premier element : Pays, parent_id = 0, on rentre pas dans ce cas. On imagine que l'id du terme "Pays" est 1
+	                    // 2e element : Portugal. On a parent_id = 1, on vérifie si le terme existe avec comme parent "Pays" On imagine que ID de Portugal = 2 donc parent_id devient 2
+	                    // 3e element : Madeira. On a parent_id = 2, On imagine que ID Madeira = 3, donc parent_id devient 3
+	                    // Etc.
+	                    $term_exists = term_exists( $term, "hierarchical_keywords", intval($parent_id) );
+	                }
+
+                // S'il existe pas on le créé
+                if ( !$term_exists )
+                {
+                    $term_insert = wp_insert_term( $term, "hierarchical_keywords", array( 'parent' => intval($parent_id ) ) );
+                    if ( !is_wp_error( $term_insert ) )
+                    {
+                        // Si on a aucune erreur pour créer le terme
+                        $parent_id = $term_insert["term_id"];
+                    }
+                }
+                else
+	                {
+	                    $parent_id = $term_exists["term_id"];
+	                }
+                if ( 0 == $key)
+                {
+                    wp_set_object_terms($attachment_id, intval($parent_id),  "hierarchical_keywords", true);
+                }
+            }
+
+            // On a parcouru tout le sous tableau.
+            // Logiquement, $parent_id = l'id du terme enfant le plus bas du sous tableau.
+            if ( $parent_id != 0 )
+            {
+                $terms_to_associate[] = $parent_id; // On l'ajoute au tableau des termes à associer
+            }
+
+        }
+
+        $terms_to_associate = array_map( 'intval', $terms_to_associate ); // On s'assure que tous les termes ID soient en int
+        $association = wp_set_object_terms( $attachment_id, $terms_to_associate, "hierarchical_keywords", true );
+    }
+}
+add_action('add_attachment', 'ol_add_hierarchical_keywords', 15, 1);
+
+
+
+
+
+
+/* fonction pour créer un tag cloud personalisé: on retire les mots clefs dont les parents sont à 0 pour les hierarchical keywords */
+
+
+function ol_hierarchical_keywords_cloud($queried_term_id)
+{
+	$exclude = array();
+	$terms =  get_terms(
+								array (
+										"taxonomy" => "hierarchical_keywords",
+										"hide_empty" => false
+										)
+								);
+	foreach($terms as $term)
+		{
+			if (0 == $term -> parent)
+				{
+					$exclude[]= intval($term -> term_id);
+				}
+		}
+
+	$exclude[]= $queried_term_id;
+
+	$args = array (
+							'link' => 'view',
+							'taxonomy' => "hierarchical_keywords",
+							'unit'          => 'em',
+							'smallest'   => 1,
+							'largest'     => 2,
+							'number'   => 25,
+							'hide_empty' => false,
+							'separator'  => '    ',
+							'format'  => 'list',
+							'exclude' => $exclude
+						);
+
+				 wp_tag_cloud($args);
+}
+add_action("ol_hierarchical_keywords_cloud", "ol_hierarchical_keywords_cloud", 10, 1);
+
+
+/* filtre les terms pour la taxo hierarchical keywords pour supprimer les mots clefs dont le parent est 0 */
+
+
+function ol_hierarchical_keywords_terms($terms, $attachment_id, $taxonomy)
+{
+	if(("attachment" == get_post_type($attachment_id)) and ("hierarchical_keywords" == $taxonomy) )
+		{
+			$ol_terms = array();
+			foreach ($terms as $term)
+				{
+					if (0 != $term -> parent)
+						{
+							$ol_terms[] = $term;
+						}
+				}
+				return $ol_terms;
+		}
+}
+add_filter("get_the_terms", "ol_hierarchical_keywords_terms", 10, 3);
+
+
 
 
 

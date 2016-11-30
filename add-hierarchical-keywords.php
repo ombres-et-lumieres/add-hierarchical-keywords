@@ -47,11 +47,12 @@ defined('ABSPATH') or die("No script kiddies please!");
 
 include( "actions/photo-metas.php");
 include("actions/photos-taxo.php");
-include("admin/add-colomns.php");
-include("admin/thumb-settings.php");
-include("admin/galleries-settings.php");
-include("admin/menu.php");
-include( "admin/more-input-fields.php");
+//include("actions/modify-defaults.php");
+//include("admin/add-colomns.php");
+//include("admin/thumb-settings.php");
+//include("admin/galleries-settings.php");
+//include("admin/menu.php");
+//include( "admin/more-input-fields.php");
 include( "galerie/galerie-functions.php");
 include("galerie/galerie.php");
 
