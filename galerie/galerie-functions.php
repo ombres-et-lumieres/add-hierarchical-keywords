@@ -467,74 +467,8 @@ add_filter("the_excerpt", "photos_excerpt", 11, 1);
 
 
 
-/******************************************************************************************************************************
-deux fonctions pour récupérer les termes d' une taxonomie hiérarchique sous la forme d' une suite de tableaux respectant cette hiérarchie.
-on pose la donnée suivante: $terms = get_the_terms( $attachment_id, "hierarchical_keywords", "ombres-et-lumieres");
-**************************************************************************************************************************/
-
-//fonction qui construt le tableau final
-
-function make_array($terms)
-{
-	$hierarchical_keywords = array();
-
-	foreach ($terms as $key => $term)
-		{
-			// si le terme n' est pas u Ancêtre, je lance la recherche pour les trouver tous
-			if (0 != $term -> parent)
-				{
-					$hierarchical_keywords[] = search_origin($terms, $term);
-				}
-		}
-	return $hierarchical_keywords;
-}
 
 
-
-//fonction récursive pour remonter à l' ancêtre ultime et en stockant les termes au passage
-function search_origin($terms ,$term)
-{
-	if (0 !=$term -> parent)
-		{
-			$tab_terms[] = $term -> name;
-
-			// on parcourt le tableau pour retrouver les ancêtres du $term
-			foreach ($terms as $term_tab)
-				{
-					if($term -> parent = $term_tab -> term_id)
-						{ // si l' élément est un ancêtre, on le met dans le tableau $tab_terms
-							$tab_terms[] = $term_tab -> name;
-						}
-						else
-							{ // sinon on reprend la recherche
-								search_origin($terms ,$term_tab);
-							}
-				}
-		} // on sort de la boucle infernale lorsque on a un parent id à o
-		else
-		{  // et, donc, on retourne le tableau
-			return $tab_terms;
-		}
-}
-
-
-
-
-
-
-/* modification du nombre d' attachment visible par page d' archive pour la taxo "hierarchical_keywords" */
-
-
-
-function ol_diplay_archive_attachment( $query )
-{
-	if( !is_admin() && is_post_type_archive("attachment") && "attachment" == $query->get('post_type') )
-	{
-		$query->set( 'posts_per_page', 100 );
-	}
-	return $query;
-}
-add_filter( 'pre_get_posts', 'ol_diplay_archive_attachment', 10, 1 );
 
 
 

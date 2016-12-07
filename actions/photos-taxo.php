@@ -104,7 +104,7 @@ function ol_add_hierarchical_keywords($attachment_id)
 	                {
 	                    $parent_id = $term_exists["term_id"];
 	                }
-                if ( 0 == $key)
+                if ( 0 == $key)  // j' ai supprimé 0== $keyPrincipale parce qu' alors on n' ajoute le terme parent que pour le premier sous tableau rencontré
                 {
                     wp_set_object_terms($attachment_id, intval($parent_id),  "hierarchical_keywords", true);
                 }
@@ -128,14 +128,36 @@ add_action('add_attachment', 'ol_add_hierarchical_keywords', 15, 1);
 
 
 
+/* recherche tous les id des mots clefs enfants de "avec personnage" */
 
 
-/* fonction pour créer un tag cloud personalisé: on retire les mots clefs dont les parents sont à 0 pour les hierarchical keywords */
+function exclude_personnages()
+{
+	/*on récupère l' iD du terme parent "avec personnages */
+	$term_id = get_term_by("name","avec personnages", "hierarchical_keywords") -> term_id;
+
+	/* on recherce ses enfants directs */
+	$children = get_term_children($term_id, "hierarchical_keywords");
+
+	/* le premier élément à stocker est l' ID parent */
+	$personnages[] = $term_id;
+
+	foreach ($children as $child)
+		{
+			$personnages[] = $child;
+		}
+	return $personnages;
+}
+
+
+/* fonction pour créer un tag cloud personalisé: on retire les mots clefs dont les parents sont à 0 pour les hierarchical keywords ainsi  que le terme "avec personnage et ses enfants*/
+
 
 
 function ol_hierarchical_keywords_cloud($queried_term_id)
 {
-	$exclude = array();
+	$exclude = exclude_personnages();
+
 	$terms =  get_terms(
 								array (
 										"taxonomy" => "hierarchical_keywords",
@@ -170,25 +192,121 @@ function ol_hierarchical_keywords_cloud($queried_term_id)
 add_action("ol_hierarchical_keywords_cloud", "ol_hierarchical_keywords_cloud", 10, 1);
 
 
-/* filtre les terms pour la taxo hierarchical keywords pour supprimer les mots clefs dont le parent est 0 */
+/* filtre les terms pour la taxo hierarchical keywords pour supprimer les mots clefs dont le parent est 0  ainsi  que le terme "avec personnage et ses enfants*/
 
 
 function ol_hierarchical_keywords_terms($terms, $attachment_id, $taxonomy)
 {
 	if(("attachment" == get_post_type($attachment_id)) and ("hierarchical_keywords" == $taxonomy) )
 		{
+			$personnages = exclude_personnages();
+
 			$ol_terms = array();
+
 			foreach ($terms as $term)
 				{
-					if (0 != $term -> parent)
+					$term_id = $term -> term_id;
+
+					if ((0 != $term -> parent) and (!in_array( $term_id, $personnages)))
 						{
 							$ol_terms[] = $term;
 						}
 				}
+
 				return $ol_terms;
 		}
 }
 add_filter("get_the_terms", "ol_hierarchical_keywords_terms", 10, 3);
+
+
+
+
+
+
+
+
+/* modification du nombre d' attachment visible par page d' archive pour la taxo "hierarchical_keywords" */
+
+// cela ne fonctionnne pas
+
+function ol_display_archive_attachment( $query )
+{
+	if( !is_admin() && "hierarchical_keywords" == $query->get("taxonomy"))
+	{
+		$query->set( 'posts_per_page', 100 );
+	}
+
+}
+add_action( 'pre_get_posts', 'ol_display_archive_attachment', 10, 1 );
+
+
+
+
+
+
+
+/******************************************************************************************************************************
+deux fonctions pour récupérer les termes d' une taxonomie hiérarchique sous la forme d' une suite de tableaux respectant cette hiérarchie.
+on pose la donnée suivante: $terms = get_the_terms( $attachment_id, "hierarchical_keywords", "ombres-et-lumieres");
+**************************************************************************************************************************/
+
+
+
+//Encore à tester
+
+
+
+
+//fonction qui construt le tableau final
+
+function make_array($terms)
+{
+	$hierarchical_keywords = array();
+
+	foreach ($terms as $key => $term)
+		{
+			// si le terme n' est pas u Ancêtre, je lance la recherche pour les trouver tous
+			if (0 != $term -> parent)
+				{
+					$hierarchical_keywords[] = search_origin($terms, $term);
+				}
+		}
+	return $hierarchical_keywords;
+}
+
+
+
+//fonction récursive pour remonter à l' ancêtre ultime et en stockant les termes au passage
+function search_origin($terms ,$term)
+{
+	if (0 !=$term -> parent)
+		{
+			$tab_terms[] = $term -> name;
+
+			// on parcourt le tableau pour retrouver les ancêtres du $term
+			foreach ($terms as $term_tab)
+				{
+					if($term -> parent = $term_tab -> term_id)
+						{ // si l' élément est un ancêtre, on le met dans le tableau $tab_terms
+							$tab_terms[] = $term_tab -> name;
+						}
+						else
+							{ // sinon on reprend la recherche
+								search_origin($terms ,$term_tab);
+							}
+				}
+		} // on sort de la boucle infernale lorsque on a un parent id à o
+		else
+		{  // et, donc, on retourne le tableau
+			return $tab_terms;
+		}
+}
+
+
+
+
+
+
 
 
 
