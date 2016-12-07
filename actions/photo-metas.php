@@ -37,7 +37,7 @@ function ol_modify_attachment_datas($data, $id)
 
 
 
-
+/* je vais chercher les informations d' abord dans le tableau des xmp, ensuite, si c' est vide, dans celui des exifs et, enfin, si c' est toujours vide, dans les iptc */
 
 
 	$author = isset($xmp["Owner Name"]) ? $xmp["Owner Name"] : "";
