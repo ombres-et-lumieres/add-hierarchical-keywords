@@ -259,6 +259,7 @@ on pose la donnée suivante: $terms = get_the_terms( $attachment_id, "hierarchic
 
 //fonction qui construt le tableau final
 
+/*
 function make_array($terms)
 {
 	$hierarchical_keywords = array();
@@ -273,10 +274,12 @@ function make_array($terms)
 		}
 	return $hierarchical_keywords;
 }
+*/
 
 
 
 //fonction récursive pour remonter à l' ancêtre ultime et en stockant les termes au passage
+/*
 function search_origin($terms ,$term)
 {
 	if (0 !=$term -> parent)
@@ -301,6 +304,7 @@ function search_origin($terms ,$term)
 			return $tab_terms;
 		}
 }
+*/
 
 
 
