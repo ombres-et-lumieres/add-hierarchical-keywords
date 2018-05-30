@@ -1,5 +1,22 @@
 <?php
 
+/*
+La raison d' être de ce plugin: l' ajout d' une taxonomie permettant de reprendre les mots clefs, vocabulaire photo, tels que définis dans Lightroom, c' est à dire de manière hiérarchique, et les enregistrer en base de données de la même façon.
+
+Viennent ensuite une série de fonctions permettant leur affichage en front
+
+
+Ce qui manque: la gestion des mots clefs: que faire s' il est modifié, si la seule photo à l' utiliser est retirée, ... .
+
+Pour mon usage personnel, j' utilise le plugin wp/lr de façon à gérer ma bibliothèque d' images depuis le logiciel Lightroom ce qui résoud le problème.
+
+*/
+
+
+
+
+
+
 // Register Custom Taxonomy
 function hierarchical_keywords() {
 
@@ -33,9 +50,15 @@ function hierarchical_keywords() {
 		'show_admin_column'          => true,
 		'show_in_nav_menus'          => true,
 		'show_tagcloud'              => true,
-		'query_var' => 'hierarchical_keywords'
+		'query_var' 				 => 'hierarchical_keywords',
+		'update_count_callback'		 => '_update_generic_term_count',
+		'rewrite'					 => array(
+											  'slug' => 'photos',
+											  'with_front' => true,
+											  'hierarchical' => true
+											  )
 	);
-	register_taxonomy( 'hierarchical_keywords',  'attachment' , $args );
+	register_taxonomy( 'hierarchical_keywords',  array('attachment') , $args );
 
 }
 add_action( 'init', 'hierarchical_keywords', 1 );
@@ -128,190 +151,200 @@ add_action('add_attachment', 'ol_add_hierarchical_keywords', 15, 1);
 
 
 
-/* recherche tous les id des mots clefs enfants de "avec personnage" */
 
 
-function exclude_personnages()
+
+/* réorganise une taxonomie hiérarchique en une suite d' ojects hiérarchiques, d' après un script de Matthias Baragoin on slack */
+
+function ol_get_taxonomy_hierarchy($taxonomy, $parent = 0, $level = 0 ) {
+        // only 1 taxonomy
+        $taxonomy = is_array( $taxonomy ) ? array_shift( $taxonomy ) : $taxonomy;
+        // get all direct decendants of the $parent
+
+
+        $terms = get_terms( array(
+								    'taxonomy' => 'hierarchical_keywords',
+								    'hide_empty' => false,
+								    'parent' => $parent,
+								) );
+
+
+
+        // prepare a new array.  these are the children of $parent
+        // we'll ultimately copy all the $terms into this new array, but only after they
+        // find their own children
+
+        $children = array();
+
+        // go through all the direct decendants of $parent, and gather their children
+
+        foreach ( $terms as $term )
+	        {
+	            //$term->price = get_field('field_58e9f311e1db9', $term );
+	            $term->level = $level;
+	            // recurse to get the direct decendants of "this" term
+	            $term->children = ol_get_taxonomy_hierarchy($taxonomy, $term->term_id,$level +1 );
+	            // add the term to our new array
+	            $children[ $term->term_id ] = $term ;
+	        }
+        // send the results back to the caller
+        return $children;
+    }
+
+
+/* réorganise les données trouvées par le script précédent dans un tableau de tableaux dont la clef est l' id du terme et les valeurs sont "parent", "name" et "children" */
+
+function ol_tableau($children)
 {
-	/*on récupère l' iD du terme parent "avec personnages */
-	$term_id = get_term_by("name","avec personnages", "hierarchical_keywords") -> term_id;
+	$exclus = array("état de la photo", "avec personnages", "membres Ars Varia", "Anka", "Brigitte", "Céline D", "François", "Geneviève", "Inessa", "Isa", "laura", "Laura UE", "Simona", "Tiziana", "Virginie", "Katia M.", "Michaela", "Monika", "Stanislava", "Walléria", "Mariana", "Uliana Elina");
 
-	/* on recherce ses enfants directs */
-	$children = get_term_children($term_id, "hierarchical_keywords");
 
-	/* le premier élément à stocker est l' ID parent */
-	$personnages[] = $term_id;
+	$taxo = array();
 
 	foreach ($children as $child)
-		{
-			$personnages[] = $child;
-		}
-	return $personnages;
+	{
+		if (!in_array($child -> name, $exclus))
+			{
+				$term_id = $child -> term_id;
+
+				$taxo[$term_id] = array ("parent" => $child -> parent, "name" => $child -> name, "children" => "");
+
+				if (!empty($child -> children))
+					{
+						$enfants = ol_tableau($child -> children);
+
+						$taxo[$term_id] = array ("parent" => $child -> parent, "name" => $child -> name, "children" => $enfants);
+
+					}
+			}
+	}
+	return $taxo;
 }
+
+
+/* organise la fonction précédente pour le front avec son html */
+
+function ol_tri_hierarchical($taxo_terms)
+{
+	foreach($taxo_terms as $term_id => $term)
+	{
+
+		if(0 == $term["parent"])
+			{
+				echo "<ul class= 'groupe'> ";
+
+				$term_children = get_term_children($term_id, "hierarchical_keywords");
+
+				if (0 != count($term_children))
+					{
+						echo "<h4 class = 'titre-groupe' >". $term["name"] . "</h4>";
+					}
+					else
+						{
+							$term_link = get_term_link($term_id, 'hierarchical_keywords');
+
+							echo '<h4 class = "titre-groupe" ><a href="' . esc_url( $term_link ) . '">' . $term["name"] . '</a></h4>';
+						}
+			}
+			else
+				{
+					echo "<ul class= 'keywords'> ";
+
+					$term_link = get_term_link($term_id, 'hierarchical_keywords');
+
+					if ( is_wp_error( $term_link ) ) { continue; }
+
+					echo '<li class = "keyword" ><a href="' . esc_url( $term_link ) . '">' . $term["name"] . '</a></li>';
+						}
+
+
+
+		if (!empty($term["children"]))
+		{
+			$children_terms = $term["children"];
+
+			$terms_links =  ol_tri_hierarchical($children_terms);
+		}
+
+		echo "</ul>";
+	}
+
+}
+add_action("ol_tri_hierarchical", "ol_tri_hierarchical", 20, 1);
+
+
+
 
 
 /* fonction pour créer un tag cloud personalisé: on retire les mots clefs dont les parents sont à 0 pour les hierarchical keywords ainsi  que le terme "avec personnage et ses enfants*/
 
-
-
-function ol_hierarchical_keywords_cloud($queried_term_id)
+function ol_hierarchical_keywords_cloud($taxo_name)
 {
-	$exclude = exclude_personnages();
+	$children = ol_get_taxonomy_hierarchy($taxo_name);
 
-	$terms =  get_terms(
-								array (
-										"taxonomy" => "hierarchical_keywords",
-										"hide_empty" => false
-										)
-								);
-	foreach($terms as $term)
-		{
-			if (0 == $term -> parent)
-				{
-					$exclude[]= intval($term -> term_id);
-				}
-		}
+	$taxo = ol_tableau($children);
 
-	$exclude[]= $queried_term_id;
 
-	$args = array (
-							'link' => 'view',
-							'taxonomy' => "hierarchical_keywords",
-							'unit'          => 'em',
-							'smallest'   => 1,
-							'largest'     => 2,
-							'number'   => 25,
-							'hide_empty' => false,
-							'separator'  => '    ',
-							'format'  => 'list',
-							'exclude' => $exclude
-						);
 
-				 wp_tag_cloud($args);
+	?><h3 class="titre-keywords" > Recherche par mots clefs </h3><?php
+
+	 do_action("ol_tri_hierarchical", $taxo);
+
 }
 add_action("ol_hierarchical_keywords_cloud", "ol_hierarchical_keywords_cloud", 10, 1);
 
 
-/* filtre les terms pour la taxo hierarchical keywords pour supprimer les mots clefs dont le parent est 0  ainsi  que le terme "avec personnage et ses enfants*/
 
 
-function ol_hierarchical_keywords_terms($terms, $attachment_id, $taxonomy)
+/* réorganise les termes d' une taxonomie hiérarchique pour une image en une suite d' ojects hiérarchiques, d' après un script de Matthias Baragoin on slack */
+
+function ol_get_img_terms_hierarchy($object_id,$taxonomy, $parent = 0, $level = 0 ) {
+        // only 1 taxonomy
+        $taxonomy = is_array( $taxonomy ) ? array_shift( $taxonomy ) : $taxonomy;
+        // get all direct decendants of the $parent
+
+
+		$terms = wp_get_object_terms( $object_id, $taxonomy, array( 'parent' => $parent ) );
+
+
+
+        // prepare a new array.  these are the children of $parent
+        // we'll ultimately copy all the $terms into this new array, but only after they
+        // find their own children
+
+        $children = array();
+
+        // go through all the direct decendants of $parent, and gather their children
+
+        foreach ( $terms as $term )
+	        {
+	            //$term->price = get_field('field_58e9f311e1db9', $term );
+	            $term->level = $level;
+	            // recurse to get the direct decendants of "this" term
+	            $term->children = ol_get_taxonomy_hierarchy($taxonomy, $term->term_id,$level +1 );
+	            // add the term to our new array
+	            $children[ $term->term_id ] = $term ;
+	        }
+        // send the results back to the caller
+        return $children;
+    }
+
+
+
+
+/* fonction pour créer un tag cloud personalisé: on retire les mots clefs dont les parents sont à 0 pour les hierarchical keywords ainsi  que le terme "avec personnage et ses enfants*/
+
+function ol_hierarchical_img_keywords_cloud($object_id, $taxo_name)
 {
-	if(("attachment" == get_post_type($attachment_id)) and ("hierarchical_keywords" == $taxonomy) )
-		{
-			$personnages = exclude_personnages();
+	$children = ol_get_img_terms_hierarchy($object_id, $taxo_name);
 
-			$ol_terms = array();
-
-			foreach ($terms as $term)
-				{
-					$term_id = $term -> term_id;
-
-					if ((0 != $term -> parent) and (!in_array( $term_id, $personnages)))
-						{
-							$ol_terms[] = $term;
-						}
-				}
-
-				return $ol_terms;
-		}
-}
-add_filter("get_the_terms", "ol_hierarchical_keywords_terms", 10, 3);
+	$taxo = ol_tableau($children);
 
 
-
-
-
-
-
-
-/* modification du nombre d' attachment visible par page d' archive pour la taxo "hierarchical_keywords" */
-
-// cela ne fonctionnne pas
-
-function ol_display_archive_attachment( $query )
-{
-	if( !is_admin() && "hierarchical_keywords" == $query->get("taxonomy"))
-	{
-		$query->set( 'posts_per_page', 100 );
-	}
+	do_action("ol_tri_hierarchical", $taxo);
 
 }
-add_action( 'pre_get_posts', 'ol_display_archive_attachment', 10, 1 );
-
-
-
-
-
-
-
-/******************************************************************************************************************************
-deux fonctions pour récupérer les termes d' une taxonomie hiérarchique sous la forme d' une suite de tableaux respectant cette hiérarchie.
-on pose la donnée suivante: $terms = get_the_terms( $attachment_id, "hierarchical_keywords", "ombres-et-lumieres");
-**************************************************************************************************************************/
-
-
-
-//Encore à tester
-
-
-
-
-//fonction qui construt le tableau final
-
-/*
-function make_array($terms)
-{
-	$hierarchical_keywords = array();
-
-	foreach ($terms as $key => $term)
-		{
-			// si le terme n' est pas u Ancêtre, je lance la recherche pour les trouver tous
-			if (0 != $term -> parent)
-				{
-					$hierarchical_keywords[] = search_origin($terms, $term);
-				}
-		}
-	return $hierarchical_keywords;
-}
-*/
-
-
-
-//fonction récursive pour remonter à l' ancêtre ultime et en stockant les termes au passage
-/*
-function search_origin($terms ,$term)
-{
-	if (0 !=$term -> parent)
-		{
-			$tab_terms[] = $term -> name;
-
-			// on parcourt le tableau pour retrouver les ancêtres du $term
-			foreach ($terms as $term_tab)
-				{
-					if($term -> parent = $term_tab -> term_id)
-						{ // si l' élément est un ancêtre, on le met dans le tableau $tab_terms
-							$tab_terms[] = $term_tab -> name;
-						}
-						else
-							{ // sinon on reprend la recherche
-								search_origin($terms ,$term_tab);
-							}
-				}
-		} // on sort de la boucle infernale lorsque on a un parent id à o
-		else
-		{  // et, donc, on retourne le tableau
-			return $tab_terms;
-		}
-}
-*/
-
-
-
-
-
-
-
+add_action("ol_hierarchical_img_keywords_cloud", "ol_hierarchical_img_keywords_cloud", 10, 2);
 
 
 

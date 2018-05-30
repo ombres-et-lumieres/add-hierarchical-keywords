@@ -33,3 +33,35 @@ li.px250 {
 }
 
 
+
+.keywords{
+	margin-left: 10%;
+	border-left: 1px solid white;
+	padding-left: 1%
+}
+
+
+
+.groupe {
+	margin-bottom: 25px;
+	margin-left: auto;
+	margin-right: auto;
+	border: 2px solid white
+}
+
+.keyword {
+	display: none;
+	margin-bottom: 10px;
+}
+
+
+
+.mots-clefs {
+	width: 100%;
+}
+
+
+.titre-keywords{
+	margin-bottom: 25px;
+}
+

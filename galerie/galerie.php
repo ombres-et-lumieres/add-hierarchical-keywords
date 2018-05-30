@@ -1,21 +1,32 @@
 <?php
 
+/* Cette partie du plugin gère le shortcode natif de galerie de wordpress. Donc, à plus ou moins brève échéance il est condamné */
+
+
+
+
+
+
+
 /* http://wordpress.stackexchange.com/questions/4343/how-to-customise-the-output-of-the-wp-image-gallery-shortcode-from-a-plugin
 et le codex:  https://developer.wordpress.org/reference/functions/wp_get_attachment_link/*/
 
 
 
-add_filter( 'post_gallery', 'ol_post_gallery', 10, 2 );
+
 function ol_post_gallery( $output, $attr)
 {
 	global $post;
 
 	$attachments_ids =  galery_attachments( $attr);
 
-	if(is_woocommerce())
-	{
-		$size = get_theme_mod( 'oetl_thumbnail_woo_size',  '200');
-	}
+	if(is_plugin_active("woocommerce"))
+		{
+			if(is_woocommerce())
+			{
+				$size = get_theme_mod( 'oetl_thumbnail_woo_size',  '200');
+			}
+		}
 	else
 		{
 			$size = get_theme_mod( 'oetl_thumbnail_size',  '150');
@@ -43,7 +54,7 @@ function ol_post_gallery( $output, $attr)
     return $output;
 }
 
-
+add_filter( 'post_gallery', 'ol_post_gallery', 10, 2 );
 
 
 

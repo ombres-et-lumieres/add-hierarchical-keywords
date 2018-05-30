@@ -1,6 +1,6 @@
 <?php
 /*
-Plugin Name: add-hierarchical-keywords
+Plugin Name: add-hierarchical-keywords new
 Plugin URI: http://ombres-et-lumieres.eu
 Description: récupération des mots clefs des photos et autre éléments nécessaires
 Version: 1.0.0
@@ -20,6 +20,12 @@ if (!defined('WP_PLUGIN_URL'))
       define('WP_PLUGIN_URL', WP_CONTENT_URL.'/plugins');
 if (!defined('WP_PLUGIN_DIR'))
       define('WP_PLUGIN_DIR', WP_CONTENT_DIR.'/plugins');
+
+
+
+define( 'HIERARCHICAL_KEYWORDS_URL', plugin_dir_url( __FILE__ ) );
+
+
 
 
 
@@ -47,15 +53,10 @@ defined('ABSPATH') or die("No script kiddies please!");
 
 include( "actions/photo-metas.php");
 include("actions/photos-taxo.php");
-//include("actions/modify-defaults.php");
-//include("admin/add-colomns.php");
-//include("admin/thumb-settings.php");
-//include("admin/galleries-settings.php");
-//include("admin/menu.php");
-//include( "admin/more-input-fields.php");
+include("actions/add-colomns.php");
 include( "galerie/galerie-functions.php");
 include("galerie/galerie.php");
-
+include("admin/view.php");
 
 
 
@@ -66,12 +67,14 @@ function add_styles()
 
 	wp_enqueue_style( 'add-galeries-to-posts' );
 
+/*
+	wp_register_script("keywords",  plugin_dir_url( __FILE__ )."js/keywords.js", array());
+
+	wp_enqueue_script("keywords",  plugin_dir_url( __FILE__ )."js/keywords.js", array());
+*/
+
 }
 add_action( 'wp_enqueue_scripts', 'add_styles' );
-
-
-
-
 
 
 

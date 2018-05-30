@@ -1,5 +1,6 @@
 <?php
 
+
 function images_setup()
   {
 	if ( function_exists( 'add_image_size' ) )
@@ -210,46 +211,55 @@ function tri_chronologique($photos_ids)
 
 function oetl_post_thumbnail($post_id)
 {
-	 $post_thumbnail_id = get_post_thumbnail_id( $post_id );
+	$post_thumbnail_id = get_post_thumbnail_id( $post_id );
 
-	if (is_front_page())
-		{
-			$thumb_size = get_theme_mod('oetl_blog_post_thumbnails_size',  '400');
-		}
-		elseif(in_category("journal", $post_id) and is_archive())
+	if((!empty($attachment_id)) and (false != $attachment_id))
+	{
+		if (is_front_page())
 			{
-				$thumb_size = get_theme_mod('oetl_blog_post_thumbnails_size',  '700');
+				$thumb_size = get_theme_mod('oetl_blog_post_thumbnails_size',  '400');
 			}
-			elseif(in_category("portfolio", $post_id))
+			elseif(in_category("journal", $post_id) and is_archive())
 				{
-					$thumb_size = get_theme_mod('oetl_portfolio_post_thumbnails_size',  '200');
+					$thumb_size = get_theme_mod('oetl_blog_post_thumbnails_size',  '700');
 				}
-				elseif ("page-templates /photos-page.php" !=get_page_template_slug($post_id) )
+				elseif(in_category("portfolio", $post_id))
 					{
-						$thumb_size = 300;
+						$thumb_size = get_theme_mod('oetl_portfolio_post_thumbnails_size',  '200');
 					}
+					elseif (("page-templates /photos-page.php" !=get_page_template_slug($post_id) ) and(!is_single($post_id)))
+						{
+							$thumb_size = 300;
+						}
+						elseif (is_single($post_id))
+							{
+								$thumb_size = 1000;
+							}
+		else
+			{
+				$thumb_size = get_theme_mod( 'oetl_post_thumbnails_size',   '200');
+			}
+
+		 $thumb_size .= "px";
 
 
 
+		$image =  wp_get_attachment_image_src( $post_thumbnail_id, $thumb_size);
 
-				else
-					{
-						$thumb_size = get_theme_mod( 'oetl_post_thumbnails_size',   '200');
-					}
+		$attachment_metadata = wp_get_attachment_metadata($post_id);
+		$attachment_metadata = $attachment_metadata["oetl"];
 
-	 $thumb_size .= "px";
+		$alt = "photo créée par: " . $attachment_metadata["Author"] . ",pour le site: " . $attachment_metadata["Copyright"] . ". Titre de la photo: " . $attachment_metadata["title"] . ".";
 
+		$thumb = array(
+						"scr" => wp_get_attachment_image($post_thumbnail_id, $thumb_size, $icon = false, array("alt" => $alt)),
+						"width" => $image[1],
+						"height" => $image[2]
+		);
 
-
-	$image =  wp_get_attachment_image_src( $post_thumbnail_id, $thumb_size);
-
-	$thumb = array(
-								"scr" => wp_get_attachment_image($post_thumbnail_id, $thumb_size),
-								"width" => $image[1],
-								"height" => $image[2]
-	);
-
-	return $thumb;
+		return $thumb;
+	} //	if((!empty($attachment_id)) and (false != $attachment_id))
+	else return false;
 }
 
 
@@ -275,7 +285,7 @@ function category_class( $classes ) {
 
 					$classes[] = array_diff($classes, $attachment_terms);
 
-					$classes[] = "AAAAAAAAAAAAAAAAAAAAAAAA";
+
 				}
 
 	$thumb = oetl_post_thumbnail($post_id);
@@ -375,7 +385,12 @@ function ol_galery_html( $attachments_ids, $size)
 		$width = $datas_imagette[1];
 
 		$src = wp_get_attachment_image($id, $thumb_size);
-		$link = '<a  class = "pop-up"    rel = "lightbox"  href =" ' .   $href   . ' "  ><section class="entry-post-thumbnail" > ' . $src . ' </section><section class="extrait-texte"> ' .  get_the_excerpt($id)  . '</section></a>';
+		$link = '<a  class = "pop-up"    rel = "lightbox"  href =" ' .   $href   . ' "  ><section class="entry-post-thumbnail" > ' . $src . ' </section>'
+/*
+		<section class="extrait-texte"> '
+		 //.  get_the_excerpt($id)  .
+		 '</section></a>'
+*/  ;
 
         $list .= '<li class="gallery-item  px' .  $size    . ' " width = " ' . $width . 'px" ><section class="entry-content">' . $link . '</section></li>';
      }
@@ -462,13 +477,6 @@ function photos_excerpt($the_excerpt)
 }
 
 add_filter("the_excerpt", "photos_excerpt", 11, 1);
-
-
-
-
-
-
-
 
 
 
