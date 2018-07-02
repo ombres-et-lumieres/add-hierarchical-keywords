@@ -195,7 +195,7 @@ add_filter( 'wp_update_attachment_metadata' ,'ol_modify_attachment_datas', 10, 2
 /* Création et sauvegarde de champs de métas dans l' admin de chaque photo */
 /* ************************************************************** ***************/
 
-
+/* le code qui suit est une esquisse de ce qu' il faudrait ajouter aux photos si je veux les vendre, donc pas utile maintenant */
 
 function ol_attachment_metas_fields ($form_fields, $attachment ) //provoque une recherche infinie pour la vue en grille de la bibliothèque des médias
 {

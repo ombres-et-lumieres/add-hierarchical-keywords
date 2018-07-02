@@ -13,7 +13,7 @@
 
 /* Ce code affiche les métas des photos dans la vue en grille d la bibliothèque, mais sans les rendre éditables, ce qu' il faudrait pouvoir faire, à minma avec le plugin "admin colomn" */
 
-
+/* pas utile dans un premier temps */
 
 
 function oetl_media_columns_copyright( $posts_columns )

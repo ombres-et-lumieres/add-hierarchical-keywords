@@ -4,8 +4,8 @@ le titre qui va apparaître sur la page de l' image (image.php)
 les textes à afficher sur la page image
 ce qui doit se trouver dans la balise "alt"
 nombre de photos à afficher sur la page d' archive
-la taille du post thumbnail
-la taille des imagettes dans les galerie.
+la taille du post thumbnail (?)
+la taille des imagettes dans les galerie
 
 
 
